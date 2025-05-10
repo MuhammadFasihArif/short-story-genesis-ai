@@ -1,73 +1,111 @@
-# Welcome to your Lovable project
 
-## Project info
+# AI Shorts Generator
 
-**URL**: https://lovable.dev/projects/cc9251a2-bb43-41bb-97bb-66b588327cec
+A futuristic, full-stack AI-powered app for generating short videos from text prompts or custom stories.
 
-## How can I edit this code?
+## 📋 Features
 
-There are several ways of editing your application.
+- Generate short videos from text prompts or custom stories
+- Select from multiple visual styles (Realistic, Anime, Cartoon, etc.)
+- Choose from different TTS voice models
+- Select caption fonts
+- Download generated videos and caption JSON files
+- Placeholder UI for social media sharing
 
-**Use Lovable**
+## 🚀 Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/cc9251a2-bb43-41bb-97bb-66b588327cec) and start prompting.
+### Frontend
+- React with TypeScript
+- Tailwind CSS for styling
+- shadcn/ui component library
+- React Query for data fetching
+- React Router for navigation
 
-Changes made via Lovable will be committed automatically to this repo.
+### Backend (Python)
+- FastAPI for the API server
+- Integration with external AI services:
+  - Groq LLM for story generation
+  - Stability AI for image generation
+  - TTS models for voice synthesis
+- Optional MongoDB integration for metadata storage
 
-**Use your preferred IDE**
+## ⚙️ Setup Instructions
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Frontend Setup
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Create a `.env` file based on `.env.example`:
+   ```
+   VITE_API_URL=http://localhost:8000
+   ```
+4. Start the development server:
+   ```
+   npm run dev
+   ```
 
-Follow these steps:
+### Backend Setup
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. Install Python dependencies:
+   ```
+   pip install fastapi uvicorn python-multipart nltk pillow torch TTS groq stability-sdk pydub moviepy
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Create a `.env` file in the backend directory with your API keys:
+   ```
+   STABILITY_API_KEY=your-stability-api-key
+   GROQ_API_KEY=your-groq-api-key
+   MONGODB_URI=mongodb://username:password@localhost:27017/ai_shorts (optional)
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3. Start the FastAPI server:
+   ```
+   uvicorn main:app --reload
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## 🔗 Backend Integration
+
+The provided Python script (`video_generator.py`) needs to be integrated with the FastAPI backend:
+
+1. Move your existing Python script to the backend directory
+2. Import the necessary functions in the FastAPI app
+3. Follow the integration pattern in the `backend_reference.py` file
+
+### Key Integration Points:
+
+- The `/api/generate-video` endpoint accepts POST requests with the video configuration
+- The backend processes the request, generates the video, and returns URLs to the video and captions files
+- For production, consider implementing background tasks or job queues for video processing
+- Optional MongoDB integration for storing video metadata
+
+## 📁 Project Structure
+
+```
+/
+├── src/
+│   ├── components/         # Reusable UI components
+│   ├── lib/                # Utilities and API client
+│   ├── pages/              # Page components
+│   └── App.tsx             # Main app component with routes
+├── backend/                # Python FastAPI backend (not included)
+│   ├── main.py             # FastAPI application
+│   └── video_generator.py  # Your video generation script
+└── .env.example            # Example environment variables
 ```
 
-**Edit a file directly in GitHub**
+## 📝 Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Frontend (.env)
+- `VITE_API_URL`: URL of the backend API server
 
-**Use GitHub Codespaces**
+### Backend (.env)
+- `STABILITY_API_KEY`: Your Stability AI API key
+- `GROQ_API_KEY`: Your Groq API key
+- `MONGODB_URI`: Optional MongoDB connection string
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📜 License
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/cc9251a2-bb43-41bb-97bb-66b588327cec) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+[MIT License](LICENSE)

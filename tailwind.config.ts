@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,12 +62,25 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+        cyan: {
+          400: 'hsl(var(--cyan))',
+        },
+        magenta: {
+          400: 'hsl(var(--magenta))',
+        },
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			fontFamily: {
+				inter: ['Inter', 'sans-serif'],
+				space: ['Space Grotesk', 'sans-serif'],
+				roboto: ['Roboto', 'sans-serif'],
+				opensans: ['Open Sans', 'sans-serif'],
+				poppins: ['Poppins', 'sans-serif'],
 			},
 			keyframes: {
 				'accordion-down': {
@@ -84,12 +98,30 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
+        'pulse-glow': {
+          '0%, 100%': { opacity: '0.7', filter: 'blur(3px)' },
+          '50%': { opacity: '1', filter: 'blur(5px)' },
+        },
+        'glow': {
+          '0%, 100%': { filter: 'drop-shadow(0 0 10px rgba(139, 92, 246, 0.7))' },
+          '50%': { filter: 'drop-shadow(0 0 20px rgba(139, 92, 246, 1))' },
+        },
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+				'accordion-up': 'accordion-up 0.2s ease-out',
+        'float': 'float 6s ease-in-out infinite',
+        'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
+        'glow': 'glow 3s ease-in-out infinite',
+			},
+      backgroundImage: {
+        'grid-pattern': 'linear-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.1) 1px, transparent 1px)',
+      }
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
