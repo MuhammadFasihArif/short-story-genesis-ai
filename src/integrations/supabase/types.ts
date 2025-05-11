@@ -9,13 +9,101 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      scenes: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          end_time: number | null
+          id: string
+          image_prompt: string
+          image_url: string | null
+          narration_text: string
+          start_time: number | null
+          story_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          end_time?: number | null
+          id?: string
+          image_prompt: string
+          image_url?: string | null
+          narration_text: string
+          start_time?: number | null
+          story_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          end_time?: number | null
+          id?: string
+          image_prompt?: string
+          image_url?: string | null
+          narration_text?: string
+          start_time?: number | null
+          story_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenes_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stories: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      voice_samples: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          voice_file_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          voice_file_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          voice_file_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      scene_belongs_to_user: {
+        Args: { scene_story_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

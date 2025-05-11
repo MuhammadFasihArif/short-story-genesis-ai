@@ -17,6 +17,7 @@ export type VideoRequest = {
   captionFont: string;
   imageStyle: string;
   ttsModel: string;
+  voiceSampleUrl?: string;
 };
 
 export type VideoResponse = {

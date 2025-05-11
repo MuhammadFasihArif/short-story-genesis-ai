@@ -22,13 +22,16 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import GlowingButton from "@/components/GlowingButton";
 import FuturisticBackground from "@/components/FuturisticBackground";
 import FuturisticLoading from "@/components/FuturisticLoading";
 import VideoPlayer from "@/components/VideoPlayer";
+import VoiceUpload from "@/components/VoiceUpload";
 import { apiClient } from "@/lib/api-client";
+import { supabase } from "@/integrations/supabase/client";
 import { FONT_OPTIONS, IMAGE_STYLES, TTS_MODELS, VideoResponse } from "@/lib/api-types";
-import { ArrowRight, Download, Loader } from "lucide-react";
+import { ArrowRight, Download, Loader, Mic } from "lucide-react";
 
 const CreatePage = () => {
   const navigate = useNavigate();
@@ -40,10 +43,12 @@ const CreatePage = () => {
   const [captionFont, setCaptionFont] = useState(FONT_OPTIONS[0].id);
   const [imageStyle, setImageStyle] = useState(IMAGE_STYLES[0].id);
   const [ttsModel, setTtsModel] = useState(TTS_MODELS[0].id);
+  const [customVoiceUrl, setCustomVoiceUrl] = useState<string | null>(null);
   
   // App state
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<VideoResponse | null>(null);
+  const [isVoiceSheetOpen, setIsVoiceSheetOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,14 +67,45 @@ const CreatePage = () => {
       setIsLoading(true);
       setResult(null);
       
+      // Check if user is authenticated (required for saving to Supabase)
+      const { data: { session } } = await supabase.auth.getSession();
+      
       // Make API request
       const response = await apiClient.generateVideo({
         storyText: isCustomStory ? storyText : undefined,
         storyPrompt: !isCustomStory ? storyPrompt : undefined,
         captionFont,
         imageStyle,
-        ttsModel
+        ttsModel,
+        voiceSampleUrl: customVoiceUrl || undefined
       });
+      
+      // If user is logged in, save the story to Supabase
+      if (session?.user) {
+        try {
+          const { data: storyData, error: storyError } = await supabase
+            .from('stories')
+            .insert({
+              title: isCustomStory 
+                ? storyText.split('.')[0].substring(0, 50) // First sentence as title
+                : storyPrompt.substring(0, 50), // Use prompt as title
+              user_id: session.user.id
+            })
+            .select('id')
+            .single();
+          
+          if (storyError) throw storyError;
+          
+          // TODO: Add scenes data when we have the AI backend integration
+          // This will be done in the future when we integrate the Python backend
+        } catch (dbError) {
+          console.error("Failed to save to database:", dbError);
+          // We don't want to block the UI if DB saving fails
+        }
+      } else {
+        // If user is not logged in, we still proceed but let them know
+        toast.info("Sign in to save your stories");
+      }
       
       setResult(response);
       toast.success("Video generated successfully!");
@@ -90,6 +126,12 @@ const CreatePage = () => {
     document.body.removeChild(a);
     
     toast.success(`${type === 'video' ? 'Video' : 'Captions'} download started`);
+  };
+
+  const handleVoiceUploadComplete = (url: string) => {
+    setCustomVoiceUrl(url);
+    setIsVoiceSheetOpen(false);
+    toast.success("Voice sample ready for use");
   };
 
   return (
@@ -204,22 +246,60 @@ const CreatePage = () => {
                     {/* TTS Model */}
                     <div className="space-y-2">
                       <Label htmlFor="ttsModel">TTS Voice Model</Label>
-                      <Select 
-                        value={ttsModel} 
-                        onValueChange={setTtsModel}
-                        disabled={isLoading}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select voice model" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {TTS_MODELS.map((model) => (
-                            <SelectItem key={model.id} value={model.id}>
-                              {model.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select 
+                          value={ttsModel} 
+                          onValueChange={setTtsModel}
+                          disabled={isLoading}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Select voice model" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TTS_MODELS.map((model) => (
+                              <SelectItem key={model.id} value={model.id}>
+                                {model.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        {/* Voice Upload Button */}
+                        <Sheet open={isVoiceSheetOpen} onOpenChange={setIsVoiceSheetOpen}>
+                          <SheetTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-secondary px-3 text-sm font-medium text-secondary-foreground shadow-sm hover:bg-secondary/90"
+                            >
+                              <Mic className="w-4 h-4" />
+                            </button>
+                          </SheetTrigger>
+                          <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+                            <SheetHeader>
+                              <SheetTitle>Upload Voice Sample</SheetTitle>
+                            </SheetHeader>
+                            <div className="py-6">
+                              <VoiceUpload onUploadComplete={handleVoiceUploadComplete} />
+                              
+                              <div className="mt-4 text-sm text-muted-foreground">
+                                <p>Upload a voice sample to be used for generating speech.</p>
+                                <p className="mt-2">For best results:</p>
+                                <ul className="list-disc pl-5 mt-1 space-y-1">
+                                  <li>Use a clear recording with minimal background noise</li>
+                                  <li>Speak in a natural, consistent tone</li>
+                                  <li>Record at least 10-15 seconds of audio</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </SheetContent>
+                        </Sheet>
+                      </div>
+                      
+                      {customVoiceUrl && (
+                        <p className="text-xs text-emerald-500 dark:text-emerald-400">
+                          Custom voice sample uploaded
+                        </p>
+                      )}
                     </div>
                   </div>
                   
