@@ -28,7 +28,6 @@ import VideoPlayer from "@/components/VideoPlayer";
 import VoiceUpload from "@/components/VoiceUpload";
 import MainNav from "@/components/MainNav";
 import { apiClient } from "@/lib/api-client";
-import { supabase } from "@/integrations/supabase/client";
 import { FONT_OPTIONS, IMAGE_STYLES, TTS_MODELS, VideoResponse } from "@/lib/api-types";
 import { ArrowRight, Download, Loader, Mic } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,28 +76,8 @@ const CreatePage = () => {
         voiceSampleUrl: customVoiceUrl || undefined
       });
       
-      // If user is logged in, save the story to Supabase
-      if (user) {
-        try {
-          const { data: storyData, error: storyError } = await supabase
-            .from('stories')
-            .insert({
-              title: isCustomStory 
-                ? storyText.split('.')[0].substring(0, 50) // First sentence as title
-                : storyPrompt.substring(0, 50), // Use prompt as title
-              user_id: user.id
-            })
-            .select('id')
-            .single();
-          
-          if (storyError) throw storyError;
-          
-          // TODO: Add scenes data when we have the AI backend integration
-        } catch (dbError) {
-          console.error("Failed to save to database:", dbError);
-          // We don't want to block the UI if DB saving fails
-        }
-      }
+      // We're not using Supabase anymore, so we don't need to save to a database here
+      // In a real application with your own DB, you could add the database storage logic here
       
       setResult(response);
       toast.success("Video generated successfully!");

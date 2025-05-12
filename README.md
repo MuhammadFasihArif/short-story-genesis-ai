@@ -1,111 +1,88 @@
 
-# AI Shorts Generator
+# AI Short Video Generator
 
-A futuristic, full-stack AI-powered app for generating short videos from text prompts or custom stories.
+This project is a web application that generates short-form videos using AI.
 
-## 📋 Features
+## Project Structure
+- `frontend/`: React frontend application
+- `backend/`: Python FastAPI backend
 
-- Generate short videos from text prompts or custom stories
-- Select from multiple visual styles (Realistic, Anime, Cartoon, etc.)
-- Choose from different TTS voice models
-- Select caption fonts
-- Download generated videos and caption JSON files
-- Placeholder UI for social media sharing
+## Backend Setup
 
-## 🚀 Tech Stack
+1. Navigate to the backend directory
+   ```
+   cd backend
+   ```
 
-### Frontend
-- React with TypeScript
-- Tailwind CSS for styling
-- shadcn/ui component library
-- React Query for data fetching
-- React Router for navigation
+2. Create a virtual environment
+   ```
+   python -m venv venv
+   ```
 
-### Backend (Python)
-- FastAPI for the API server
-- Integration with external AI services:
-  - Groq LLM for story generation
-  - Stability AI for image generation
-  - TTS models for voice synthesis
-- Optional MongoDB integration for metadata storage
+3. Activate the virtual environment
+   - On Windows:
+     ```
+     venv\Scripts\activate
+     ```
+   - On macOS/Linux:
+     ```
+     source venv/bin/activate
+     ```
 
-## ⚙️ Setup Instructions
+4. Install dependencies
+   ```
+   pip install -r requirements.txt
+   ```
 
-### Frontend Setup
+5. Run the backend server
+   ```
+   python main.py
+   ```
+   The server will run at http://localhost:8000
 
-1. Clone the repository
-2. Install dependencies:
+## Frontend Setup
+
+1. Navigate to the frontend directory
+   ```
+   cd frontend
+   ```
+
+2. Install dependencies
    ```
    npm install
    ```
-3. Create a `.env` file based on `.env.example`:
-   ```
-   VITE_API_URL=http://localhost:8000
-   ```
-4. Start the development server:
+
+3. Run the development server
    ```
    npm run dev
    ```
+   The frontend will run at http://localhost:5173
 
-### Backend Setup
+## API Routes
 
-1. Install Python dependencies:
-   ```
-   pip install fastapi uvicorn python-multipart nltk pillow torch TTS groq stability-sdk pydub moviepy
-   ```
+- `GET /api/health`: Check if the API server is running
+- `POST /api/generate-video`: Generate a video from text or prompt
 
-2. Create a `.env` file in the backend directory with your API keys:
-   ```
-   STABILITY_API_KEY=your-stability-api-key
-   GROQ_API_KEY=your-groq-api-key
-   MONGODB_URI=mongodb://username:password@localhost:27017/ai_shorts (optional)
-   ```
+## Generating Videos
 
-3. Start the FastAPI server:
-   ```
-   uvicorn main:app --reload
-   ```
+To generate a video, send a POST request to `/api/generate-video` with the following JSON body:
 
-## 🔗 Backend Integration
-
-The provided Python script (`video_generator.py`) needs to be integrated with the FastAPI backend:
-
-1. Move your existing Python script to the backend directory
-2. Import the necessary functions in the FastAPI app
-3. Follow the integration pattern in the `backend_reference.py` file
-
-### Key Integration Points:
-
-- The `/api/generate-video` endpoint accepts POST requests with the video configuration
-- The backend processes the request, generates the video, and returns URLs to the video and captions files
-- For production, consider implementing background tasks or job queues for video processing
-- Optional MongoDB integration for storing video metadata
-
-## 📁 Project Structure
-
-```
-/
-├── src/
-│   ├── components/         # Reusable UI components
-│   ├── lib/                # Utilities and API client
-│   ├── pages/              # Page components
-│   └── App.tsx             # Main app component with routes
-├── backend/                # Python FastAPI backend (not included)
-│   ├── main.py             # FastAPI application
-│   └── video_generator.py  # Your video generation script
-└── .env.example            # Example environment variables
+```json
+{
+  "storyPrompt": "A futuristic city where...",
+  "captionFont": "roboto",
+  "imageStyle": "realistic",
+  "ttsModel": "1"
+}
 ```
 
-## 📝 Environment Variables
+or
 
-### Frontend (.env)
-- `VITE_API_URL`: URL of the backend API server
-
-### Backend (.env)
-- `STABILITY_API_KEY`: Your Stability AI API key
-- `GROQ_API_KEY`: Your Groq API key
-- `MONGODB_URI`: Optional MongoDB connection string
-
-## 📜 License
-
-[MIT License](LICENSE)
+```json
+{
+  "storyText": "Once upon a time...",
+  "captionFont": "roboto",
+  "imageStyle": "realistic",
+  "ttsModel": "1"
+}
+```
