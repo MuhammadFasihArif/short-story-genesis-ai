@@ -16,12 +16,15 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import FuturisticBackground from "@/components/FuturisticBackground";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const AuthPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
   
   // Check if user is already logged in
   useEffect(() => {
@@ -54,17 +57,30 @@ const AuthPage = () => {
       return;
     }
     
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+    
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
       
       if (error) throw error;
       
+      if (data?.user?.identities?.length === 0) {
+        // User already exists but hasn't verified email
+        toast.error("An account with this email already exists. Please log in or reset your password.");
+        return;
+      }
+      
+      setVerificationSent(true);
       toast.success("Registration successful! Please check your email to verify your account.");
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast.error(error.message || "An error occurred during sign up");
     } finally {
       setLoading(false);
@@ -81,17 +97,30 @@ const AuthPage = () => {
     
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Login error:", error);
+        
+        if (error.message.includes("Email not confirmed")) {
+          toast.error("Please verify your email address before logging in.");
+          setVerificationSent(true);
+        } else if (error.message.includes("Invalid login credentials")) {
+          toast.error("Invalid login credentials. Please check your email and password.");
+        } else {
+          toast.error(error.message || "Login failed");
+        }
+        return;
+      }
       
       toast.success("Login successful!");
       navigate("/create");
     } catch (error: any) {
-      toast.error(error.message || "Invalid login credentials");
+      console.error("Login error:", error);
+      toast.error(error.message || "An error occurred during login");
     } finally {
       setLoading(false);
     }
@@ -107,6 +136,15 @@ const AuthPage = () => {
             <CardTitle className="text-2xl font-bold text-gradient">AI Shorts Generator</CardTitle>
             <CardDescription>Sign in to create amazing AI-powered videos</CardDescription>
           </CardHeader>
+          
+          {verificationSent && (
+            <Alert className="mx-6 mb-4 bg-blue-500/10 border-blue-500/50">
+              <Info className="h-4 w-4 text-blue-500" />
+              <AlertDescription className="text-sm text-blue-500">
+                Verification email sent. Please check your inbox and verify your account before logging in.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
