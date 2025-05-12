@@ -19,11 +19,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  if (!user) {
-    // In a real app, we would check auth state with a backend service
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
-
+  // Allowing access whether authenticated or not
   return children;
 };
 

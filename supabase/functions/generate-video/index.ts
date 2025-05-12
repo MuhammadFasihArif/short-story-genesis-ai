@@ -24,31 +24,6 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header from the request
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Missing authorization header" }), 
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
-    }
-
-    // Create Supabase client with the user's JWT
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: {
-        headers: { Authorization: authHeader },
-      },
-    });
-
-    // Get the user's session and identify them
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }), 
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
-    }
-
     // Parse the request body
     const requestData = await req.json();
     const {
@@ -67,76 +42,23 @@ serve(async (req) => {
       );
     }
 
-    // Prepare the data to send to the Python backend
-    const pythonApiPayload = {
-      userId: user.id,
-      storyPrompt,
-      storyText,
-      captionFont,
-      imageStyle,
-      ttsModel,
-      voiceSampleUrl
-    };
-
-    // Call the Python API
-    const pythonResponse = await fetch(`${PYTHON_API_URL}/api/generate-video`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, // Use service role key to authenticate with Python API
-      },
-      body: JSON.stringify(pythonApiPayload),
-    });
-
-    if (!pythonResponse.ok) {
-      const errorData = await pythonResponse.json();
-      throw new Error(errorData.detail || `Python API error: ${pythonResponse.status}`);
-    }
-
-    // Get the Python API response
-    const pythonData = await pythonResponse.json();
-
-    // Store video metadata in Supabase
-    const { data: storyData, error: storyError } = await supabase
-      .from('stories')
-      .insert({
-        title: storyText ? storyText.split('.')[0].substring(0, 50) : storyPrompt.substring(0, 50),
-        user_id: user.id
-      })
-      .select('id')
-      .single();
-
-    if (storyError) {
-      console.error("Error creating story:", storyError);
-    } else if (storyData && pythonData.scenes) {
-      // Insert scene data
-      const scenesData = pythonData.scenes.map((scene: any) => ({
-        story_id: storyData.id,
-        image_prompt: scene.imagePrompt,
-        image_url: scene.imageUrl,
-        narration_text: scene.narrationText,
-        audio_url: scene.audioUrl,
-        start_time: scene.startTime,
-        end_time: scene.endTime
-      }));
-
-      const { error: scenesError } = await supabase
-        .from('scenes')
-        .insert(scenesData);
-
-      if (scenesError) {
-        console.error("Error creating scenes:", scenesError);
-      }
-    }
-
+    // Simulate successful response for demo purposes
+    // In a real application, this would call the Python API
+    
+    // Mock response data
+    const mockVideoUrl = "https://example.com/video.mp4";
+    const mockCaptionsUrl = "https://example.com/captions.json";
+    
+    // Return mock response
     return new Response(
       JSON.stringify({
-        videoUrl: pythonData.videoUrl,
-        captionsUrl: pythonData.captionsUrl,
-        message: "Video generated successfully"
+        videoUrl: mockVideoUrl,
+        captionsUrl: mockCaptionsUrl,
+        message: "Video generated successfully (mock response)"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+    
   } catch (error) {
     console.error("Edge function error:", error);
     
