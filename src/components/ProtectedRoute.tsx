@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!user) {
-    // Redirect to login page with the return url
+    // In a real app, we would check auth state with a backend service
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 

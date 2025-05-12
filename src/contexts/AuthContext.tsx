@@ -1,50 +1,64 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+
+type User = {
+  id: string;
+  email: string;
+};
 
 type AuthContextType = {
-  session: Session | null;
   user: User | null;
   isLoading: boolean;
-  signOut: () => Promise<void>;
+  signOut: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Check if user is already logged in via localStorage
   useEffect(() => {
-    // Set up the subscription for auth state changes first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setIsLoading(false);
-      }
-    );
-
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    const storedUser = localStorage.getItem("demo_user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setIsLoading(false);
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  // Listen for navigation events to simulate auth
+  useEffect(() => {
+    // This would normally be listening to auth state changes
+    const handleRouteChange = () => {
+      const currentPath = window.location.pathname;
+      
+      // If user just returned from a simulated login flow at /auth
+      if (currentPath === "/create" && !user) {
+        const demoUser = { 
+          id: "demo-" + Math.random().toString(36).substr(2, 9),
+          email: "demo@example.com" 
+        };
+        setUser(demoUser);
+        localStorage.setItem("demo_user", JSON.stringify(demoUser));
+      }
+    };
+
+    handleRouteChange();
+    
+    // For a real app, we'd use a proper router event listener
+    window.addEventListener("popstate", handleRouteChange);
+    return () => {
+      window.removeEventListener("popstate", handleRouteChange);
+    };
+  }, [user]);
+
+  const signOut = () => {
+    setUser(null);
+    localStorage.removeItem("demo_user");
   };
 
   const value = {
-    session,
     user,
     isLoading,
     signOut,
