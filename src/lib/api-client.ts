@@ -1,26 +1,19 @@
 
 import { ApiError, VideoRequest, VideoResponse } from "./api-types";
-
-// This should be configured in .env
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { supabase } from "@/integrations/supabase/client";
 
 export const apiClient = {
   async generateVideo(request: VideoRequest): Promise<VideoResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/generate-video`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request),
+      const { data, error } = await supabase.functions.invoke("generate-video", {
+        body: request
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw { message: errorData.message || "Video generation failed", status: response.status };
+      
+      if (error) {
+        throw { message: error.message || "Video generation failed", status: 500 };
       }
-
-      return await response.json();
+      
+      return data as VideoResponse;
     } catch (error) {
       console.error("API error:", error);
       throw error;
@@ -29,11 +22,15 @@ export const apiClient = {
 
   async getHealthcheck(): Promise<{ status: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/health`);
-      if (!response.ok) {
-        throw { message: "API server is down", status: response.status };
+      const { data, error } = await supabase.functions.invoke("health", {
+        method: "GET"
+      });
+      
+      if (error) {
+        throw { message: "API server is down", status: 500 };
       }
-      return await response.json();
+      
+      return data as { status: string };
     } catch (error) {
       console.error("Health check error:", error);
       throw error;

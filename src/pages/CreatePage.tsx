@@ -1,6 +1,4 @@
-
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Card,
@@ -28,13 +26,15 @@ import FuturisticBackground from "@/components/FuturisticBackground";
 import FuturisticLoading from "@/components/FuturisticLoading";
 import VideoPlayer from "@/components/VideoPlayer";
 import VoiceUpload from "@/components/VoiceUpload";
+import MainNav from "@/components/MainNav";
 import { apiClient } from "@/lib/api-client";
 import { supabase } from "@/integrations/supabase/client";
 import { FONT_OPTIONS, IMAGE_STYLES, TTS_MODELS, VideoResponse } from "@/lib/api-types";
 import { ArrowRight, Download, Loader, Mic } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CreatePage = () => {
-  const navigate = useNavigate();
+  const { user } = useAuth();
   
   // Form state
   const [isCustomStory, setIsCustomStory] = useState(false);
@@ -67,9 +67,6 @@ const CreatePage = () => {
       setIsLoading(true);
       setResult(null);
       
-      // Check if user is authenticated (required for saving to Supabase)
-      const { data: { session } } = await supabase.auth.getSession();
-      
       // Make API request
       const response = await apiClient.generateVideo({
         storyText: isCustomStory ? storyText : undefined,
@@ -81,7 +78,7 @@ const CreatePage = () => {
       });
       
       // If user is logged in, save the story to Supabase
-      if (session?.user) {
+      if (user) {
         try {
           const { data: storyData, error: storyError } = await supabase
             .from('stories')
@@ -89,7 +86,7 @@ const CreatePage = () => {
               title: isCustomStory 
                 ? storyText.split('.')[0].substring(0, 50) // First sentence as title
                 : storyPrompt.substring(0, 50), // Use prompt as title
-              user_id: session.user.id
+              user_id: user.id
             })
             .select('id')
             .single();
@@ -97,14 +94,10 @@ const CreatePage = () => {
           if (storyError) throw storyError;
           
           // TODO: Add scenes data when we have the AI backend integration
-          // This will be done in the future when we integrate the Python backend
         } catch (dbError) {
           console.error("Failed to save to database:", dbError);
           // We don't want to block the UI if DB saving fails
         }
-      } else {
-        // If user is not logged in, we still proceed but let them know
-        toast.info("Sign in to save your stories");
       }
       
       setResult(response);
@@ -138,20 +131,9 @@ const CreatePage = () => {
     <div className="min-h-screen flex flex-col pb-16">
       <FuturisticBackground />
       
-      <header className="py-4 mb-8 border-b border-muted relative z-10">
-        <div className="container">
-          <div className="flex items-center justify-between">
-            <h1 
-              className="text-2xl font-bold cursor-pointer text-gradient" 
-              onClick={() => navigate('/')}
-            >
-              AI Shorts Generator
-            </h1>
-          </div>
-        </div>
-      </header>
+      <MainNav />
       
-      <div className="container flex-1 relative z-10">
+      <div className="container flex-1 relative z-10 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form Column */}
           <div>

@@ -1,1 +1,8 @@
+
 project_id = "fmzgdyxhddvqthvlrkwm"
+
+[functions.generate-video]
+verify_jwt = true
+
+[functions.health]
+verify_jwt = false
