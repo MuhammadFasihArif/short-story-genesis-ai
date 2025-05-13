@@ -1,12 +1,14 @@
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Depends
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Depends, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any, Union
 import os
 import uuid
 import logging
 from pathlib import Path
+import shutil
 
 app = FastAPI(title="AI Shorts Generator API")
 
@@ -23,9 +25,16 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Directory for storing generated videos
+# Directory for storing generated videos and uploaded files
 VIDEOS_DIR = Path("./videos")
 VIDEOS_DIR.mkdir(exist_ok=True)
+
+UPLOADS_DIR = Path("./uploads")
+UPLOADS_DIR.mkdir(exist_ok=True)
+
+# Mount the static files directory
+app.mount("/videos", StaticFiles(directory="videos"), name="videos")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Models
 class VideoRequest(BaseModel):
@@ -45,6 +54,31 @@ class VideoResponse(BaseModel):
 def health_check():
     return {"status": "ok"}
 
+@app.post("/api/upload-voice")
+async def upload_voice(file: UploadFile = File(...)):
+    try:
+        # Create a unique filename
+        file_id = str(uuid.uuid4())
+        file_extension = file.filename.split(".")[-1] if file.filename else "wav"
+        filename = f"{file_id}.{file_extension}"
+        
+        # Save the file
+        file_path = UPLOADS_DIR / filename
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Construct the URL to access the file
+        voice_file_url = f"/uploads/{filename}"
+        
+        return {
+            "voice_file_url": voice_file_url,
+            "message": "Voice sample uploaded successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error uploading voice: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/generate-video", response_model=VideoResponse)
 async def generate_video(request: VideoRequest, background_tasks: BackgroundTasks):
     try:
@@ -58,11 +92,17 @@ async def generate_video(request: VideoRequest, background_tasks: BackgroundTask
         # Generate a unique ID for this video
         video_id = str(uuid.uuid4())
         
-        # In a real implementation, generate the video here
-        # For now, return a placeholder
+        # Create a placeholder video file (in a real app, this would be your actual video generation)
+        # Here we're just creating empty files as placeholders
+        video_file_path = VIDEOS_DIR / f"{video_id}.mp4"
+        captions_file_path = VIDEOS_DIR / f"{video_id}_captions.json"
         
-        # Construct URLs for the generated files - in development they'll be served
-        # by a static file server in the Python backend
+        # Create empty files for now
+        video_file_path.touch()
+        with open(captions_file_path, "w") as f:
+            f.write('{"captions": [{"start": 0, "end": 5, "text": "Example caption"}]}')
+        
+        # Construct URLs for the generated files
         video_url = f"/videos/{video_id}.mp4"
         captions_url = f"/videos/{video_id}_captions.json"
         

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Upload, FileAudio, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { API_URL } from "@/config";
 
 interface VoiceUploadProps {
   onUploadComplete?: (url: string) => void;
@@ -30,50 +30,29 @@ const VoiceUpload = ({ onUploadComplete, className }: VoiceUploadProps) => {
     try {
       setIsUploading(true);
       
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("You must be logged in to upload voice samples");
-        return;
+      // Create a FormData object to send the file
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Upload to Python backend
+      const response = await fetch(`${API_URL}/api/upload-voice`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to upload voice sample");
       }
       
-      const userId = session.user.id;
-      const filePath = `${userId}/${Date.now()}_${file.name}`;
-      
-      // Upload to Supabase Storage
-      const { error: uploadError, data } = await supabase.storage
-        .from('media')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-      
-      if (uploadError) {
-        throw uploadError;
-      }
-      
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('media')
-        .getPublicUrl(filePath);
-      
-      // Save to voice_samples table
-      const { error: dbError } = await supabase
-        .from('voice_samples')
-        .insert({
-          user_id: userId,
-          voice_file_url: publicUrl
-        });
-      
-      if (dbError) {
-        throw dbError;
-      }
+      const data = await response.json();
+      const voiceUrl = data.voice_file_url;
       
       toast.success("Voice sample uploaded successfully");
       
       // Call the callback if provided
       if (onUploadComplete) {
-        onUploadComplete(publicUrl);
+        onUploadComplete(voiceUrl);
       }
       
     } catch (error: any) {
