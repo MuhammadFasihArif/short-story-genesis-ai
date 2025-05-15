@@ -1,9 +1,4 @@
 
-// Environment configuration
-const isDevelopment = import.meta.env.DEV || true;
-
-// API configuration
-export const API_URL = isDevelopment 
-  ? "http://localhost:8000" // Local development Python backend
-  : "https://your-production-api.com"; // Replace with production URL when deploying
-
+// Frontend-only configuration
+export const APP_NAME = "AI Shorts Generator";
+export const APP_VERSION = "1.0.0";

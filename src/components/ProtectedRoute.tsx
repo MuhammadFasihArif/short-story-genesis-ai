@@ -1,5 +1,4 @@
 
-import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import FuturisticLoading from "@/components/FuturisticLoading";
 
@@ -9,7 +8,6 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
-  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -19,7 +17,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  // Allowing access whether authenticated or not
+  // Frontend-only demo, just show the children component
   return children;
 };
 

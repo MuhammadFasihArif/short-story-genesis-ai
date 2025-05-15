@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Upload, FileAudio, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { API_URL } from "@/config";
 
 interface VoiceUploadProps {
   onUploadComplete?: (url: string) => void;
@@ -30,29 +29,17 @@ const VoiceUpload = ({ onUploadComplete, className }: VoiceUploadProps) => {
     try {
       setIsUploading(true);
       
-      // Create a FormData object to send the file
-      const formData = new FormData();
-      formData.append('file', file);
+      // Mock upload process 
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Upload to Python backend
-      const response = await fetch(`${API_URL}/api/upload-voice`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to upload voice sample");
-      }
-      
-      const data = await response.json();
-      const voiceUrl = data.voice_file_url;
+      // Generate a mock URL
+      const mockVoiceUrl = "https://example.com/voice-sample.mp3";
       
       toast.success("Voice sample uploaded successfully");
       
       // Call the callback if provided
       if (onUploadComplete) {
-        onUploadComplete(voiceUrl);
+        onUploadComplete(mockVoiceUrl);
       }
       
     } catch (error: any) {
@@ -79,19 +66,17 @@ const VoiceUpload = ({ onUploadComplete, className }: VoiceUploadProps) => {
       mediaRecorder.onstop = () => {
         setAudioChunks(chunks);
         const audioBlob = new Blob(chunks, { type: 'audio/wav' });
-        const audioFile = new File([audioBlob], "recording.wav", { type: "audio/wav" });
         
-        // Create a file input event to reuse the upload logic
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(audioFile);
+        // Mock file upload instead of actually sending to backend
+        toast.success("Recording processed successfully");
         
-        const event = {
-          target: {
-            files: dataTransfer.files
-          }
-        } as unknown as React.ChangeEvent<HTMLInputElement>;
+        // Call callback with mock URL
+        if (onUploadComplete) {
+          onUploadComplete("https://example.com/recorded-voice.mp3");
+        }
         
-        handleFileUpload(event);
+        // Stop all audio tracks
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
       };
       
       mediaRecorder.start();
@@ -108,9 +93,6 @@ const VoiceUpload = ({ onUploadComplete, className }: VoiceUploadProps) => {
     if (recorder && recorder.state !== "inactive") {
       recorder.stop();
       setRecordingMode(false);
-      
-      // Stop all audio tracks
-      recorder.stream.getTracks().forEach(track => track.stop());
       toast.info("Recording stopped");
     }
   };

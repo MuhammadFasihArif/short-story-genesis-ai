@@ -1,47 +1,25 @@
 
 import { VideoRequest, VideoResponse } from "./api-types";
-import { API_URL } from "@/config";
+
+// Mock data for frontend-only development
+const mockResponse: VideoResponse = {
+  videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  captionsUrl: "https://example.com/captions.json",
+  message: "Video generated successfully"
+};
 
 export const apiClient = {
   async generateVideo(request: VideoRequest): Promise<VideoResponse> {
-    try {
-      const response = await fetch(`${API_URL}/api/generate-video`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw { 
-          message: errorData.detail || "Video generation failed", 
-          status: response.status 
-        };
-      }
-      
-      return await response.json() as VideoResponse;
-    } catch (error) {
-      console.error("API error:", error);
-      throw error;
-    }
+    console.log("Mock generateVideo called with:", request);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return mockResponse;
   },
 
   async getHealthcheck(): Promise<{ status: string }> {
-    try {
-      const response = await fetch(`${API_URL}/api/health`, {
-        method: "GET",
-      });
-      
-      if (!response.ok) {
-        throw { message: "API server is down", status: response.status };
-      }
-      
-      return await response.json() as { status: string };
-    } catch (error) {
-      console.error("Health check error:", error);
-      throw error;
-    }
+    console.log("Mock health check called");
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { status: "ok" };
   }
 };
